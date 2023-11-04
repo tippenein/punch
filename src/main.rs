@@ -1,10 +1,10 @@
 extern crate chrono;
 extern crate clap;
 extern crate rusqlite;
-use chrono::{DateTime, Duration, Timelike, Utc};
+use chrono::{DateTime, Duration, Utc};
 use clap::{arg, Command};
 use rusqlite::{params, Connection, Result};
-use std::error::Error;
+
 
 #[derive(Debug)]
 struct Entry {
@@ -72,11 +72,11 @@ fn main() -> Result<()> {
             let rows = conn.query_row(
                 "SELECT id FROM tasks WHERE outtime IS NULL ORDER BY intime DESC LIMIT 1",
                 [],
-                |row| Ok(()),
+                |_row| Ok(()),
             );
 
             match rows {
-                Ok(i) => println!("Can't punch in again"),
+                Ok(_i) => println!("Can't punch in again"),
                 Err(_) => {
                     println!("Punching into {}", task);
                     conn.execute(

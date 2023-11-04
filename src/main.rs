@@ -103,14 +103,17 @@ fn main() -> Result<()> {
                 Ok(mut e) => {
                     if let Some(entry) = e.next() {
                         let entry = entry.expect("failed");
-                        println!("Punching out from {}", entry.task);
                         let now = Utc::now();
                         let duration = now.signed_duration_since(entry.in_time);
                         conn.execute(
                             "UPDATE tasks SET outtime = ? WHERE id = ?",
                             &[&now.to_rfc3339(), &entry.id.to_string()],
                         )?;
-                        println!("Punched out after {} minutes", duration.num_minutes());
+                        println!(
+                            "Punched out from '{}' after {} minutes",
+                            entry.task,
+                            duration.num_minutes()
+                        );
                     } else {
                         println!("Can't punch out if you're not in...");
                     }
@@ -159,15 +162,15 @@ fn main() -> Result<()> {
                     } else {
                         total = total + duration;
                         println!(
-                            "Task: {}\n  In Time: {}\n  Duration (minutes): {}\n Billed: {}",
+                            "{}\n  Date: {}\n  Duration: {}\n  Billed: {}",
                             entry.task,
-                            entry.in_time,
+                            entry.in_time.format("%Y-%m-%d"),
                             display_mins(duration),
-                            entry.billed
+                            from_billed(entry.billed)
                         );
                     }
                 }
-                println!("Total {}", display_mins(total));
+                println!("Total: {}", display_mins(total));
             }
         }
         Some((s, _)) => {
@@ -181,6 +184,13 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+fn from_billed(s: String) -> String {
+    if s == "n" {
+        return "No".to_string();
+    } else {
+        return "Yes".to_string();
+    }
+}
 fn expand_home(path: &str) -> Result<String, rusqlite::Error> {
     if let Some(home) = dirs::home_dir() {
         let home_str = home.to_string_lossy();

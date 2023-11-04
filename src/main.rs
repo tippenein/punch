@@ -5,7 +5,6 @@ use chrono::{DateTime, Duration, Utc};
 use clap::{arg, Command};
 use rusqlite::{params, Connection, Result};
 
-
 #[derive(Debug)]
 struct Entry {
     id: i32,
@@ -30,7 +29,7 @@ fn cli() -> Command {
         .subcommand(Command::new("out").about("Punch out from the current task"))
         .subcommand(
             Command::new("list")
-                .about("list")
+                .about("List a tasks current entries")
                 .arg(arg!(<TASK> "List date and time for given task"))
                 .arg(arg!(--"billed")),
         )

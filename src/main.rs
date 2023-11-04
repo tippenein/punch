@@ -161,12 +161,14 @@ fn main() -> Result<()> {
                     } else {
                         total = total + duration;
                         println!(
-                            "{}\n  Date: {}\n  Duration: {}\n  Billed: {}",
+                            "{}\n  Date: {}\n  Duration: {}\n",
                             entry.task,
                             entry.in_time.format("%Y-%m-%d"),
                             display_mins(duration),
-                            from_billed(entry.billed)
                         );
+                        if show_billed {
+                            println!("  Billed: {}", from_billed(entry.billed));
+                        }
                     }
                 }
                 println!("Total: {}", display_mins(total));

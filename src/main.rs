@@ -4,7 +4,7 @@ extern crate rusqlite;
 use chrono::{DateTime, Duration, Utc};
 use clap::{arg, Command};
 use colored::{ColoredString, Colorize};
-use rusqlite::{params, Connection, Result};
+use rusqlite::{params, Connection, Error, Result};
 
 #[derive(Debug)]
 struct Entry {
@@ -36,6 +36,20 @@ fn cli() -> Command {
         )
 }
 
+fn schema_init(conn: &Connection) -> () {
+    conn.execute(
+        "CREATE TABLE tasks (
+                id INTEGER PRIMARY KEY,
+                task TEXT,
+                intime TEXT NOT NULL,
+                outtime TEXT,
+                billed BOOLEAN DEFAULT 'n' NOT NULL
+            )",
+        [],
+    )
+    .unwrap();
+}
+
 fn main() -> Result<()> {
     let matches = cli().get_matches();
 
@@ -54,16 +68,7 @@ fn main() -> Result<()> {
     if !table_exists {
         println!("Initializing ~/.punch.db");
         // Initialize the database if it doesn't exist
-        conn.execute(
-            "CREATE TABLE tasks (
-                id INTEGER PRIMARY KEY,
-                task TEXT,
-                intime TEXT NOT NULL,
-                outtime TEXT,
-                billed BOOLEAN DEFAULT 'n' NOT NULL
-            )",
-            [],
-        )?;
+        schema_init(&conn);
     }
 
     match matches.subcommand() {
@@ -110,9 +115,9 @@ fn main() -> Result<()> {
                             &[&now.to_rfc3339(), &entry.id.to_string()],
                         )?;
                         println!(
-                            "Punched out from '{}' after {} minutes",
-                            entry.task,
-                            duration.num_minutes()
+                            "Punched out from {} after {}",
+                            entry.task.green(),
+                            display_mins(duration)
                         );
                     } else {
                         println!("Can't punch out if you're not in...");
@@ -145,7 +150,7 @@ fn main() -> Result<()> {
             })?;
             let entry_vec: Vec<_> = entry_iter.collect();
             if entry_vec.is_empty() {
-                println!("Nothing for task '{}'", task);
+                println!("Nothing for task {}", task.green());
             } else {
                 let mut total = chrono::Duration::zero();
                 for e in entry_vec {
@@ -160,6 +165,8 @@ fn main() -> Result<()> {
                     if entry.billed == "y" && !show_billed {
                         continue;
                     } else {
+                        println!("{:?}", entry.billed);
+                        println!("{:?}", show_billed);
                         total = total + duration;
                         println!(
                             "{}\n  Date: {}\n  Duration: {}\n",

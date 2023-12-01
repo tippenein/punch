@@ -3,6 +3,7 @@ extern crate clap;
 extern crate rusqlite;
 use chrono::{DateTime, Duration, Utc};
 use clap::{arg, Command};
+use colored::{ColoredString, Colorize};
 use rusqlite::{params, Connection, Result};
 
 #[derive(Debug)]
@@ -162,8 +163,8 @@ fn main() -> Result<()> {
                         total = total + duration;
                         println!(
                             "{}\n  Date: {}\n  Duration: {}\n",
-                            entry.task,
-                            entry.in_time.format("%Y-%m-%d"),
+                            entry.task.green(),
+                            display_date(entry.in_time),
                             display_mins(duration),
                         );
                         if show_billed {
@@ -202,13 +203,17 @@ fn expand_home(path: &str) -> Result<String, rusqlite::Error> {
     ))
 }
 
-fn display_mins(duration: Duration) -> String {
+fn display_mins(duration: Duration) -> ColoredString {
     let minutes = duration.num_minutes();
     if minutes < 60 {
-        return format!("{} minutes", minutes);
+        return format!("{} minutes", minutes).yellow();
     } else {
         let hours = minutes / 60;
         let remaining_minutes = minutes % 60;
-        return format!("{} hours {} minutes", hours, remaining_minutes);
+        return format!("{} hours {} minutes", hours, remaining_minutes).yellow();
     }
+}
+
+fn display_date(d: DateTime<Utc>) -> ColoredString {
+    d.format("%Y-%m-%d").to_string().yellow()
 }
